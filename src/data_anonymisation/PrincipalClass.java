@@ -15,11 +15,9 @@ public class PrincipalClass {
 			
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
 			
 				Fenetre fenetre= new Fenetre();
 				fenetre.setVisible(true);
-
 			}
 		});
 	

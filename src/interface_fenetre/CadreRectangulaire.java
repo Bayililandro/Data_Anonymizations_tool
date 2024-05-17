@@ -2,19 +2,31 @@ package interface_fenetre;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+
+import java.awt.event.*;
 
 import code_anonymisation_datafly.DataFlyProcessor;
 import code_anonymisation_datafly.DialogUtils;
+import code_anonymisation_datafly.KanonymityProcess;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import create_project.Importer_Exporter;
 
 @SuppressWarnings("serial")
 public class CadreRectangulaire extends JPanel {
 
+	private Font font;
     private JTable tableLeft;
     private JTable tableRight;
     private Importer_Exporter importerExporter;
@@ -26,27 +38,49 @@ public class CadreRectangulaire extends JPanel {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
+        font= new Font(" TimesRoman ",Font.BOLD+Font.PLAIN,15);//definition de la police
         // Création du bouton pour importer le fichier Excel
         Box box1 = Box.createHorizontalBox();
         JButton importButton = new JButton("Import Excel File");
         importButton.setMnemonic('I');
+        importButton.setBackground(Color.WHITE);
+        importButton.setFont(font);
         JButton value = new JButton("Choose k");
+        value.setFont(font);
         value.setMnemonic('C');
         JButton anonymized = new JButton("Anonymized");
+        anonymized.setFont(font);
         anonymized.setMnemonic('A');
+        anonymized.setBackground(Color.WHITE);
+        JButton save = new JButton("Save");
+        save.setFont(font);
+        save.setMnemonic('S');
+        save.setBackground(Color.WHITE);
         JButton view = new JButton("View data");
+        view.setFont(font);
         view.setMnemonic('V');
+        view.setBackground(Color.WHITE);
         JButton personalisize = new JButton("Personalisized");
+        personalisize.setFont(font);
         personalisize.setMnemonic('P');
+        personalisize.setBackground(Color.WHITE);
+        
         importButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {   
+                // Activer les boutons une fois le fichier Excel importé
+                  view.setEnabled(false);
+                  anonymized.setEnabled(false);
+                  personalisize.setEnabled(false);
+                  save.setEnabled(false);
                 importerExporter = new Importer_Exporter(fenetre);
                 List<List<String>> data = importerExporter.importExcelFile();
                 if (data != null) {
                     afficherDonnees(data);
+                    // Activer les boutons une fois le fichier Excel importé
+                    view.setEnabled(true);
                 }
-            }
+            }  
         });
         box1.add(importButton);
         
@@ -55,44 +89,63 @@ public class CadreRectangulaire extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				 String selectedValue = DialogUtils.showValueSelectionDialog(fenetre);
+				 int selectedValue = DialogUtils.showValueSelectionDialog(fenetre);
 	                System.out.println("Selected value: " + selectedValue);
 			}
 		});
-        box1.add(value);
+        //box1.add(value);
         
         
         view.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            	 // Récupérer les données de la table
-                List<List<String>> data = recupererDonneesDeTable();
-
-                if (data != null) {
-                    dataFlyProcessor = new DataFlyProcessor();
-                    
-                    // Récupérer les en-têtes de colonnes de la JTable tableLeft
-                    List<String> entetes = new ArrayList<>();
-                    for (int i = 0; i < tableLeft.getColumnCount(); i++) {
-                        entetes.add(tableLeft.getColumnName(i));
-                    }
-                    
-                    // Marquer les attributs quasi-identifiants
-                    dataFlyProcessor.markQuasiIdentifyingAttributes(entetes);
-
-                    // Supprimer les valeurs sous les en-têtes identifiants
-                    dataFlyProcessor.suppressIdentifyingAttributes(data, entetes);
-
-                    // Afficher les données traitées dans la JTable tableRight
-                    afficherDonneesTraitees(data, entetes);
-                }
+            	markData();
+            	anonymized.setEnabled(true);
+                personalisize.setEnabled(true);
+                save.setEnabled(true);
             }
         });
         box1.add(view);
         
         
+        
+        anonymized.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	 anonymizeData();
+            }
+        });
+        
         box1.add(anonymized);
+        personalisize.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				personlizedAnonymity();
+			}
+		});
+       
         box1.add(personalisize);
+        
+        save.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser filechoose = new JFileChooser();
+                int option = filechoose.showSaveDialog(null);
+                if (option == JFileChooser.APPROVE_OPTION) {
+                    String name = filechoose.getSelectedFile().getName();
+                    String path = filechoose.getSelectedFile().getParentFile().getPath();
+                    String file = path + "\\" + name + ".xlsx";
+                    try {
+                        Importer_Exporter.exportToExcel(tableRight, new File(file));
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+        box1.add(save);
+        box1.add(save);
         add(box1);
 
         /*
@@ -102,14 +155,21 @@ public class CadreRectangulaire extends JPanel {
          * on désactive le fait que les colonnes soient édictable
          * 
          * */
+        
+
         tableLeft = new JTable() {
+        	
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        tableLeft.setAutoResizeMode(JTable.AUTO_RESIZE_OFF); // Désactive le redimensionnement automatique des colonnes
+        tableLeft.setRowSelectionAllowed(false); // Désactive la sélection des lignes
+        tableLeft.setColumnSelectionAllowed(false); // Désactive la sélection des colonnes
+        // tableLeft.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+         tableLeft.setAutoResizeMode(JTable.AUTO_RESIZE_OFF); // Désactive le redimensionnement automatique des colonnes
         JScrollPane scrollPaneLeft = new JScrollPane(tableLeft, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Active seulement la barre de défilement horizontale
+        scrollPaneLeft.setBorder(BorderFactory.createTitledBorder("Input Data to Anonymize"));
         this.add(scrollPaneLeft);
 
         /*
@@ -124,10 +184,185 @@ public class CadreRectangulaire extends JPanel {
                 return false;
             }
         };
+        tableRight.setRowSelectionAllowed(false); // Désactive la sélection des lignes
+        tableRight.setColumnSelectionAllowed(false); // Désactive la sélection des colonnes
+        // tableRight.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         tableRight.setAutoResizeMode(JTable.AUTO_RESIZE_OFF); // Désactive le redimensionnement automatique des colonnes
         JScrollPane scrollPaneRight = new JScrollPane(tableRight, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Active seulement la barre de défilement horizontale
+        scrollPaneRight.setBorder(BorderFactory.createTitledBorder("Output Data After Anonymized"));
         this.add(scrollPaneRight);
+        
+        /*
+         * Gerer les action du curseur
+         * */
+        
+        importButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                importButton.setBackground(Color.GREEN); // Changer la couleur au survol
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                importButton.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            }
+        });
+        
+        view.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                view.setBackground(Color.GREEN); // Changer la couleur au survol
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+            	view.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            }
+        });
+        
+        anonymized.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                anonymized.setBackground(Color.GREEN); // Changer la couleur au survol
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+            	anonymized.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            }
+        });
+        
+        personalisize.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            	personalisize.setBackground(Color.GREEN); // Changer la couleur au survol
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+            	personalisize.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            }
+        });
+        
+        save.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                save.setBackground(Color.GREEN); // Changer la couleur au survol
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                save.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            }
+        });
+        
+        // Ajouter un écouteur d'événements aux en-têtes de colonnes de la JTable
+        JTableHeader header = tableRight.getTableHeader();
+        header.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int columnIndex = header.columnAtPoint(e.getPoint());
+                String columnName = tableRight.getColumnName(columnIndex);
+                // Ouvrir une boîte de dialogue pour choisir le type d'attribut
+                showAttributeTypeSelectionDialog(columnName);
+            }
+        });
+          
     }
+    JScrollPane scrollPane = new JScrollPane(tableRight);
+
+    private void showAttributeTypeSelectionDialog(String columnName) {
+        // Créer une boîte de dialogue pour choisir le type d'attribut
+        String[] options = {"Sensible", "Identifiant", "Quasi-Identifiant", "Aucun"};
+        int choice = JOptionPane.showOptionDialog(null, "Choose attribute type for column '" + columnName + "':", 
+                                                   "Attribute Type Selection", JOptionPane.DEFAULT_OPTION, 
+                                                   JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        // Appeler la méthode correspondante pour marquer l'attribut après la sélection du type d'attribut
+        if (choice != JOptionPane.CLOSED_OPTION) {
+            switch (options[choice]) {
+                case "Identifiant":
+                    highlightIdentifier(columnName);
+                    break;
+                case "Sensible":
+                    highlightSensitive(columnName);
+                    break;
+                case "Quasi-Identifiant":
+                    highlightQuasiIdentifier(columnName);
+                    break;
+            }
+        }
+    }
+    /*
+     * Methode qui definit l'action de l'anonymat des données
+     * */
+	@SuppressWarnings("unused")
+	public void anonymizeData() {
+    	// Récupérer les données de la table
+        List<List<String>> data = recupererDonneesDeTable();
+
+        if (data != null) {
+            dataFlyProcessor = new DataFlyProcessor();
+            
+            // Récupérer les en-têtes de colonnes de la JTable tableLeft
+            List<String> entetes = new ArrayList<>();
+            for (int i = 0; i < tableLeft.getColumnCount(); i++) {
+                entetes.add(tableLeft.getColumnName(i));
+            }
+            
+            
+             KanonymityProcess anonym= new KanonymityProcess();
+             
+            // Supprimer les valeurs sous les en-têtes identifiants
+            dataFlyProcessor.suppressIdentifyingAttributes(data, entetes);
+            int k= DialogUtils.showValueSelectionDialog(fenetre);
+            //anonym.applyKAnonymity(data, k);
+           
+            // Afficher les données traitées dans la JTable tableRight
+             afficherDonneesTraitees(data, entetes);
+            
+        }
+    }
+    
+    /*
+     * Methode pour maquer de l'action qui marque les données
+     * */
+    public void markData() {
+    	 // Récupérer les données de la table
+        List<List<String>> data = recupererDonneesDeTable();
+
+        if (data != null) {
+            dataFlyProcessor = new DataFlyProcessor();
+            
+            // Récupérer les en-têtes de colonnes de la JTable tableLeft
+            List<String> entetes = new ArrayList<>();
+            for (int i = 0; i < tableLeft.getColumnCount(); i++) {
+                entetes.add(tableLeft.getColumnName(i));
+            }
+                                
+            // Supprimer les valeurs sous les en-têtes identifiants
+            dataFlyProcessor.markIdentifyingAttributes(entetes);
+            dataFlyProcessor.markQuasiIdentifyingAttribut(entetes);
+            dataFlyProcessor.markSensitiveIdentifyingAttribut(entetes);
+            //dataFlyProcessor.generalizeQuasiIdentifyingAttribute(data, entetes);
+            // Afficher les données traitées dans la JTable tableRight
+            afficherDonneesTraitees(data, entetes);
+            
+        }
+            
+    }
+    
+    private void personlizedAnonymity() {
+    	// Recuperation des données importer dans la tableLeft
+    	List<List<String>> data= recupererDonneesDeTable();
+    	/*
+    	 * Si la table n'est pas vide,
+    	 *  il faut récupérer les en-têtes des colonnes
+    	 * */
+    	if(data !=null) {
+    		List<String> headers= new ArrayList<>();
+    		for(int i= 0; i< tableLeft.getColumnCount(); i++) {
+    			headers.add(tableLeft.getColumnName(i));
+    		}
+    		
+    		afficherDonneesTraitees(data, headers);
+    	}
+    }
+    
 
     /*
      * 
@@ -137,6 +372,7 @@ public class CadreRectangulaire extends JPanel {
      *
      * 
      * */
+    
    public void afficherDonnees(List<List<String>> data) {
     	 DefaultTableModel model = new DefaultTableModel();
          model.addColumn("N°"); // Ajoute une colonne pour la numérotation des lignes
@@ -155,38 +391,6 @@ public class CadreRectangulaire extends JPanel {
          tableLeft.setModel(model); // Affichage des données dans la table de gauche
        
      }
-   
-     public void afficherDonnee(List<List<String>> data) {
-  	 DefaultTableModel model = new DefaultTableModel();
-       model.addColumn("N°"); // Ajoute une colonne pour la numérotation des lignes
-       for (String header : data.get(0)) {
-           model.addColumn(header);
-       }
-       for (int i = 1; i < data.size(); i++) {
-           List<String> rowData = data.get(i);
-           Object[] rowWithIndex = new Object[rowData.size() + 1];
-           rowWithIndex[0] = i; // Numérotation de la ligne
-           for (int j = 0; j < rowData.size(); j++) {
-               rowWithIndex[j + 1] = rowData.get(j);
-           }
-           model.addRow(rowWithIndex);
-       }
-       tableRight.setModel(model); // Affichage des données dans la table de gauche
-     
-   }
-   
-// Méthode pour afficher la fenêtre de dialogue de sélection de valeur
-  /* public static String showValueSelectionDialog(JFrame parentFrame) {
-       String[] values = {"3", "5", "7"}; // Remplace ce tableau par tes propres valeurs
-       return (String) JOptionPane.showInputDialog(
-               parentFrame,
-               "Choose a value for K:",
-               "Choose K",
-               JOptionPane.PLAIN_MESSAGE,
-               null,
-               values,
-               values[0]); // Valeur par défaut
-   }*/
    
    public List<List<String>> recupererDonneesDeTable() {
 	    List<List<String>> donnees = new ArrayList<>(); // Initialisation de la liste de données
@@ -234,4 +438,45 @@ public class CadreRectangulaire extends JPanel {
 	    // Remplacer le modèle de la table avec le nouveau modèle contenant les données traitées
 	    tableRight.setModel(model);
 	}
+   
+   
+   private void highlightIdentifier(String columnName) {
+	    // Marquer l'attribut identifiant au rouge
+	    highlightColumn(columnName, Color.RED);
+	}
+
+	private void highlightSensitive(String columnName) {
+	    // Marquer l'attribut sensible au vert
+	    highlightColumn(columnName, Color.GREEN);
+	}
+
+	private void highlightQuasiIdentifier(String columnName) {
+	    // Marquer l'attribut quasi-identifiant au jaune
+	    highlightColumn(columnName, Color.YELLOW);
+	}
+
+	private void highlightColumn(String columnName, Color color) {
+	    TableColumnModel columnModel = tableRight.getColumnModel();
+	    int columnIndex = getColumnIndexByName(columnName);
+	    TableColumn column = columnModel.getColumn(columnIndex);
+	    String dotColor;
+	    if (color.equals(Color.RED)) {
+	        dotColor = "red";
+	    } else if (color.equals(Color.GREEN)) {
+	        dotColor = "green";
+	    } else if (color.equals(Color.YELLOW)) {
+	        dotColor = "yellow";
+	    } else {
+	        dotColor = "black"; // Couleur par défaut
+	    }
+	    column.setHeaderValue("<html><font color='blue'>" + columnName + "</font> <font color='" + dotColor + "'>●</font></html>");
+	}
+   private int getColumnIndexByName(String columnName) {
+       for (int i = 0; i < tableRight.getColumnCount(); i++) {
+           if (tableRight.getColumnName(i).equals(columnName)) {
+               return i;
+           }
+       }
+       return -1;
+   }
 }

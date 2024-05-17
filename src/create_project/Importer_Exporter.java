@@ -2,12 +2,16 @@ package create_project;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.TableModel;
+
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -63,9 +67,7 @@ public class Importer_Exporter extends JDialog {
 	        return data;
 	    }
 	    
-	    
-	   
-	    // Méthode Pour Importer un Fiché Excel
+	       // Méthode Pour Importer un Fiché Excel
 	    public List<List<String>> importExcelFile() {
 	        JFileChooser fileChooser = new JFileChooser();
 	        fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers Excel", "xlsx", "xls")); // Filtrer Uniquement les fichés
@@ -84,4 +86,45 @@ public class Importer_Exporter extends JDialog {
 	        } 
 	        return null;
 	    }
+	    
+	    /**
+	     * Methode d'exportation de données 
+	     * 
+	     * */
+	    public static void exportToExcel(JTable table, File file) throws IOException {
+	        TableModel model = table.getModel();
+	        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+				XSSFSheet sheet = workbook.createSheet("Sheet1");
+
+    // Create header row
+				Row headerRow = sheet.createRow(0);
+				for (int i = 0; i < model.getColumnCount(); i++) {
+				    String columnName = model.getColumnName(i);
+				    // Supprimer les balises HTML et récupérer le texte entre elles
+				    String cleanedColumnName = columnName.replaceAll("<.*?>", "");
+				    headerRow.createCell(i).setCellValue(cleanedColumnName);
+				}
+
+				// Create data rows
+				for (int i = 0; i < model.getRowCount(); i++) {
+				    Row row = sheet.createRow(i + 1);
+				    for (int j = 0; j < model.getColumnCount(); j++) {
+				        Object value = model.getValueAt(i, j);
+				        if (value != null) {
+				            if (value instanceof Number) {
+				                row.createCell(j).setCellValue(((Number) value).doubleValue());
+				            } else {
+				                row.createCell(j).setCellValue(value.toString());
+				            }
+				        }
+				    }
+				}
+
+				// Write workbook to file
+				try (FileOutputStream fos = new FileOutputStream(file)) {
+				    workbook.write(fos);
+				}
+			}
+	    }
+		
 	}
