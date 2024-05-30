@@ -58,7 +58,7 @@ public class Fenetre extends JFrame {
 			public void windowClosing(WindowEvent e) {
 				// TODO Auto-generated method stub
 				super.windowClosing(e);
-				int confirmButon= JOptionPane.showConfirmDialog(Fenetre.this, "Êtes-vous sûr de vouloir quitter?","Confirmation", JOptionPane.YES_NO_OPTION);
+				int confirmButon= JOptionPane.showConfirmDialog(Fenetre.this, "Are you sure to exit?","Confirm", JOptionPane.YES_NO_OPTION);
 				if (confirmButon== JOptionPane.YES_NO_OPTION) {
 					Fenetre.this.dispose();
 				}

@@ -4,17 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import code_anonymisation_personnalisized.CodeDataflyGen;
+import interface_fenetre.Fenetre;
 
 
 
 public class DataFlyProcessor {
+	Fenetre f;
 	
+	int niveau= DialogUtils.getSelectedValue();
+	//int niveau= DialogUtils.showValueSelectionDialog(f);
 	  // Méthode pour verifier si un attribut est identifiant
 	private boolean isIdentifyingAttribut(String header) {
 		 /*
 		  * 
-		  *  Vérifiez si l'en-tête correspond à l'un des attributs spécifiés : nom, prénom, matricule, Gmail
-		  *  
+		  *  Vérifiez si l'en-tête correspond à l'un des attributs spécifiés : nom, prénom, matricule, Gmail 
 		  *   Retournez true si l'en-tête correspond à un attribut identifiant, sinon false.
            */
 		
@@ -240,7 +243,8 @@ public class DataFlyProcessor {
 			            	for (List<String> row : data) {
 			            	    String ageValue = row.get(i);
 			            	    double age = Double.parseDouble(ageValue);
-			            	    int niveau = DialogUtils.getSelectedValue(); // Obtenez le niveau de généralisation de l'interface utilisateur
+			            	    //int niveau = DialogUtils.getSelectedValue(); // Obtenez le niveau de généralisation de l'interface utilisateur
+			            	    int niveau= DialogUtils.getSelectedValue();
 			            	    String generalizedAge = CodeDataflyGen.generalizeAge(age, niveau);
 			            	    row.set(i, generalizedAge);
 			            	}

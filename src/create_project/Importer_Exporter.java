@@ -72,7 +72,6 @@ public class Importer_Exporter extends JDialog {
 	        JFileChooser fileChooser = new JFileChooser();
 	        fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers Excel", "xlsx", "xls")); // Filtrer Uniquement les fichés
 	                                                                                                  //Excel dans un repertoire local
-
 	        int result = fileChooser.showOpenDialog(this);
 	        if (result == JFileChooser.APPROVE_OPTION) {
 	            File selectedFile = fileChooser.getSelectedFile();

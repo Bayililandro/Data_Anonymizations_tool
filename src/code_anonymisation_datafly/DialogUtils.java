@@ -12,8 +12,8 @@ public class DialogUtils {
         String[] values = {"2", "3", "4","5"}; // Valeur proposée aux utilisateurs dès le clic du bouton Choose K
         String selectedValueStr = (String) JOptionPane.showInputDialog(
                 parentFrame,
-                "Choose a value for K:",
-                "Choose K",
+                "Choose k value:",
+                "Choose k",
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 values,

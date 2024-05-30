@@ -5,7 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-
+import java.awt.Graphics;
 import java.awt.event.*;
 
 import code_anonymisation_datafly.DataFlyProcessor;
@@ -16,6 +16,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,13 +36,15 @@ public class CadreRectangulaire extends JPanel {
 
     public CadreRectangulaire() {
         super(true);
+        this.setBackground(Color.WHITE);
+        //this.setBackground(Color.LIGHT_GRAY);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         font= new Font(" TimesRoman ",Font.BOLD+Font.PLAIN,15);//definition de la police
         // Création du bouton pour importer le fichier Excel
         Box box1 = Box.createHorizontalBox();
-        JButton importButton = new JButton("Import Excel File");
+        JButton importButton = new JButton("Import data");
         importButton.setMnemonic('I');
         importButton.setBackground(Color.WHITE);
         importButton.setFont(font);
@@ -67,20 +70,34 @@ public class CadreRectangulaire extends JPanel {
         
         importButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {   
-                // Activer les boutons une fois le fichier Excel importé
-                  view.setEnabled(false);
-                  anonymized.setEnabled(false);
-                  personalisize.setEnabled(false);
-                  save.setEnabled(false);
+            public void actionPerformed(ActionEvent e) {
+                if (tableLeft != null && tableLeft.getRowCount() > 0) {
+                    int response = showConfirmDialog();
+                    if (response != JOptionPane.YES_OPTION) {
+                        return; // Do nothing if the user does not confirm
+                    }
+                    
+                    // Clear the table
+                    DefaultTableModel model = (DefaultTableModel) tableLeft.getModel();
+                    model.setRowCount(0);
+                    model.setColumnCount(0);
+                    DefaultTableModel modelRight= (DefaultTableModel) tableRight.getModel();
+                    modelRight.setRowCount(0);
+                    modelRight.setColumnCount(0);
+                }
+                
+                view.setEnabled(false);
+                anonymized.setEnabled(false);
+                personalisize.setEnabled(false);
+                save.setEnabled(false);
+                
                 importerExporter = new Importer_Exporter(fenetre);
                 List<List<String>> data = importerExporter.importExcelFile();
                 if (data != null) {
                     afficherDonnees(data);
-                    // Activer les boutons une fois le fichier Excel importé
                     view.setEnabled(true);
                 }
-            }  
+            }
         });
         box1.add(importButton);
         
@@ -191,7 +208,7 @@ public class CadreRectangulaire extends JPanel {
         JScrollPane scrollPaneRight = new JScrollPane(tableRight, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Active seulement la barre de défilement horizontale
         scrollPaneRight.setBorder(BorderFactory.createTitledBorder("Output Data After Anonymized"));
         this.add(scrollPaneRight);
-        
+
         /*
          * Gerer les action du curseur
          * */
@@ -251,6 +268,7 @@ public class CadreRectangulaire extends JPanel {
             }
         });
         
+        
         // Ajouter un écouteur d'événements aux en-têtes de colonnes de la JTable
         JTableHeader header = tableRight.getTableHeader();
         header.addMouseListener(new MouseAdapter() {
@@ -261,15 +279,20 @@ public class CadreRectangulaire extends JPanel {
                 // Ouvrir une boîte de dialogue pour choisir le type d'attribut
                 showAttributeTypeSelectionDialog(columnName);
             }
-        });
-          
+        });       
     }
+    
     JScrollPane scrollPane = new JScrollPane(tableRight);
 
+    /*
+     * Méthode qui permet l'ouverture d'une boite de dialogue pour la sélection
+     * des catégorie de données par l'utilisateur
+     * à chaque catégorie on ajout des étiquêtes spécifique pour les distinguer
+     * */
     private void showAttributeTypeSelectionDialog(String columnName) {
         // Créer une boîte de dialogue pour choisir le type d'attribut
         String[] options = {"Sensible", "Identifiant", "Quasi-Identifiant", "Aucun"};
-        int choice = JOptionPane.showOptionDialog(null, "Choose attribute type for column '" + columnName + "':", 
+        int choice = JOptionPane.showOptionDialog(null, "Choose attribute type '" + columnName + "':", 
                                                    "Attribute Type Selection", JOptionPane.DEFAULT_OPTION, 
                                                    JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         // Appeler la méthode correspondante pour marquer l'attribut après la sélection du type d'attribut
@@ -308,8 +331,9 @@ public class CadreRectangulaire extends JPanel {
              KanonymityProcess anonym= new KanonymityProcess();
              
             // Supprimer les valeurs sous les en-têtes identifiants
+             int k= DialogUtils.showValueSelectionDialog(fenetre);
             dataFlyProcessor.suppressIdentifyingAttributes(data, entetes);
-            int k= DialogUtils.showValueSelectionDialog(fenetre);
+            //int k= DialogUtils.showValueSelectionDialog(fenetre);
             //anonym.applyKAnonymity(data, k);
            
             // Afficher les données traitées dans la JTable tableRight
@@ -369,28 +393,54 @@ public class CadreRectangulaire extends JPanel {
      *  Méthode pour gérer l'affichage des données
      * Les données sont tabulaire alors on utilise une liste de liste
      * pour chaque fiché chargé on ajoute une colonne supplémentaire pour la numerotation des valeurs
-     *
+     * ici la methode permet l'affichage des données dans la tableRight
      * 
      * */
     
-   public void afficherDonnees(List<List<String>> data) {
-    	 DefaultTableModel model = new DefaultTableModel();
-         model.addColumn("N°"); // Ajoute une colonne pour la numérotation des lignes
-         for (String header : data.get(0)) {
-             model.addColumn(header);
-         }
-         for (int i = 1; i < data.size(); i++) {
-             List<String> rowData = data.get(i);
-             Object[] rowWithIndex = new Object[rowData.size() + 1];
-             rowWithIndex[0] = i; // Numérotation de la ligne
-             for (int j = 0; j < rowData.size(); j++) {
-                 rowWithIndex[j + 1] = rowData.get(j);
-             }
-             model.addRow(rowWithIndex);
-         }
-         tableLeft.setModel(model); // Affichage des données dans la table de gauche
-       
-     }
+    public void afficherDonnees(List<List<String>> data) {
+        DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("N°"); // Ajoute une colonne pour la numérotation des lignes
+        for (String header : data.get(0)) {
+            model.addColumn(header);
+        }
+        for (int i = 1; i < data.size(); i++) {
+            List<String> rowData = data.get(i);
+            Object[] rowWithIndex = new Object[rowData.size() + 1];
+            rowWithIndex[0] = i; // Numérotation de la ligne
+            for (int j = 0; j < rowData.size(); j++) {
+                rowWithIndex[j + 1] = rowData.get(j);
+            }
+            model.addRow(rowWithIndex);
+        }
+
+        if (tableLeft == null) {
+        	tableLeft = new JTable(model);
+            add(new JScrollPane(tableLeft));
+        } else {
+        	tableLeft.setModel(model);
+        }
+
+        revalidate();
+        repaint();
+    }
+
+    // boite de dialogue qui permet un message de confirmation lorque les tables ne sont pas vide
+    private int showConfirmDialog() {
+        // Create a red question mark icon
+        BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = image.createGraphics();
+        g.setColor(Color.RED);
+        g.fillOval(0, 0, 32, 32);
+        g.setColor(Color.WHITE);
+        g.drawString("?", 12, 22);
+        g.dispose();
+        Icon icon = new ImageIcon(image);
+
+        // Show the custom confirm dialog with the red question mark icon
+        return JOptionPane.showConfirmDialog(this,
+                "Table is not empty, are you sure to overwrite it",
+                "Confirm Overwrite", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, icon);
+    }
    
    public List<List<String>> recupererDonneesDeTable() {
 	    List<List<String>> donnees = new ArrayList<>(); // Initialisation de la liste de données
@@ -455,6 +505,7 @@ public class CadreRectangulaire extends JPanel {
 	    highlightColumn(columnName, Color.YELLOW);
 	}
 
+	// methode permettant de marquer les en-têtes des colonnes lors du click pour la personnalisation
 	private void highlightColumn(String columnName, Color color) {
 	    TableColumnModel columnModel = tableRight.getColumnModel();
 	    int columnIndex = getColumnIndexByName(columnName);
