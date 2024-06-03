@@ -2,7 +2,6 @@ package interface_fenetre;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.Graphics;
@@ -11,6 +10,7 @@ import java.awt.event.*;
 import code_anonymisation_datafly.DataFlyProcessor;
 import code_anonymisation_datafly.DialogUtils;
 import code_anonymisation_datafly.KanonymityProcess;
+import code_anonymisation_personnalisized.CodeDataflyGen;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -20,7 +20,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import create_project.Importer_Exporter;
 
@@ -33,6 +35,13 @@ public class CadreRectangulaire extends JPanel {
     private Importer_Exporter importerExporter;
     Fenetre fenetre;
    DataFlyProcessor dataFlyProcessor;
+   private boolean isPersonalizationMode = false;
+   
+   private Set<String> identifierColumns = new HashSet<>();
+   private Set<String> quasiIdentifierColumns = new HashSet<>();
+   private Set<String> sensitiveColumns = new HashSet<>();
+
+   private MouseListener headerMouseListener;
 
     public CadreRectangulaire() {
         super(true);
@@ -143,7 +152,6 @@ public class CadreRectangulaire extends JPanel {
 		});
        
         box1.add(personalisize);
-        
         save.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -208,7 +216,7 @@ public class CadreRectangulaire extends JPanel {
         JScrollPane scrollPaneRight = new JScrollPane(tableRight, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Active seulement la barre de défilement horizontale
         scrollPaneRight.setBorder(BorderFactory.createTitledBorder("Output Data After Anonymized"));
         this.add(scrollPaneRight);
-
+        
         /*
          * Gerer les action du curseur
          * */
@@ -257,6 +265,7 @@ public class CadreRectangulaire extends JPanel {
             }
         });
         
+       
         save.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -270,7 +279,7 @@ public class CadreRectangulaire extends JPanel {
         
         
         // Ajouter un écouteur d'événements aux en-têtes de colonnes de la JTable
-        JTableHeader header = tableRight.getTableHeader();
+      /*  JTableHeader header = tableRight.getTableHeader();
         header.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -280,8 +289,44 @@ public class CadreRectangulaire extends JPanel {
                 showAttributeTypeSelectionDialog(columnName);
             }
         });       
+    }*/
+     // Créer un MouseListener pour les en-têtes de colonnes
+        headerMouseListener = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (isPersonalizationMode) {
+                    int col = tableRight.columnAtPoint(e.getPoint());
+                    String columnName = tableRight.getColumnName(col);
+
+                    // Afficher une boîte de dialogue pour choisir le type de colonne
+                    String[] options = {"Identifiant", "Quasi-Identifiant", "Sensible"};
+                    int choice = JOptionPane.showOptionDialog(null,
+                            "Choisissez le type de colonne pour " + columnName,
+                            "Personnalisation de colonne",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE,
+                            null,
+                            options,
+                            options[0]);
+
+                    switch (choice) {
+                        case 0:
+                            highlightIdentifier(columnName);
+                            break;
+                        case 1:
+                            highlightQuasiIdentifier(columnName);
+                            break;
+                        case 2:
+                            highlightSensitive(columnName);
+                            break;
+                        default:
+                            // Pas d'action nécessaire
+                            break;
+                    }
+                }
+            }
+        };
     }
-    
     JScrollPane scrollPane = new JScrollPane(tableRight);
 
     /*
@@ -289,7 +334,7 @@ public class CadreRectangulaire extends JPanel {
      * des catégorie de données par l'utilisateur
      * à chaque catégorie on ajout des étiquêtes spécifique pour les distinguer
      * */
-    private void showAttributeTypeSelectionDialog(String columnName) {
+    /*private void showAttributeTypeSelectionDialog(String columnName) {
         // Créer une boîte de dialogue pour choisir le type d'attribut
         String[] options = {"Sensible", "Identifiant", "Quasi-Identifiant", "Aucun"};
         int choice = JOptionPane.showOptionDialog(null, "Choose attribute type '" + columnName + "':", 
@@ -309,7 +354,8 @@ public class CadreRectangulaire extends JPanel {
                     break;
             }
         }
-    }
+    }*/
+    
     /*
      * Methode qui definit l'action de l'anonymat des données
      * */
@@ -371,22 +417,27 @@ public class CadreRectangulaire extends JPanel {
     }
     
     private void personlizedAnonymity() {
-    	// Recuperation des données importer dans la tableLeft
-    	List<List<String>> data= recupererDonneesDeTable();
-    	/*
-    	 * Si la table n'est pas vide,
-    	 *  il faut récupérer les en-têtes des colonnes
-    	 * */
-    	if(data !=null) {
-    		List<String> headers= new ArrayList<>();
-    		for(int i= 0; i< tableLeft.getColumnCount(); i++) {
-    			headers.add(tableLeft.getColumnName(i));
-    		}
-    		
-    		afficherDonneesTraitees(data, headers);
-    	}
+    	// Afficher une boîte de dialogue pour demander la confirmation
+        int confirm = JOptionPane.showConfirmDialog(null,
+                "Souhaitez-vous personnaliser la détection du type d'attribut?",
+                "Confirmation de personnalisation",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            // Récupération des données importées dans tableLeft
+            List<List<String>> data = recupererDonneesDeTable();
+            if (data != null) {
+                List<String> headers = new ArrayList<>();
+                for (int i = 0; i < tableLeft.getColumnCount(); i++) {
+                    headers.add(tableLeft.getColumnName(i));
+                }
+                afficherDonneesTraitees(data, headers);
+                isPersonalizationMode = true;
+                //JOptionPane.showMessageDialog(null, "Mode de personnalisation activé. Cliquez sur les en-têtes de colonne pour les personnaliser.");
+                tableRight.getTableHeader().addMouseListener(headerMouseListener);
+            }
+        }
     }
-    
 
     /*
      * 
@@ -491,37 +542,44 @@ public class CadreRectangulaire extends JPanel {
    
    
    private void highlightIdentifier(String columnName) {
-	    // Marquer l'attribut identifiant au rouge
-	    highlightColumn(columnName, Color.RED);
-	}
+       highlightColumn(columnName, Color.RED);
+       identifierColumns.add(columnName);
+       quasiIdentifierColumns.remove(columnName);
+       sensitiveColumns.remove(columnName);
+   }
 
-	private void highlightSensitive(String columnName) {
-	    // Marquer l'attribut sensible au vert
-	    highlightColumn(columnName, Color.GREEN);
-	}
+   private void highlightSensitive(String columnName) {
+       highlightColumn(columnName, Color.GREEN);
+       sensitiveColumns.add(columnName);
+       identifierColumns.remove(columnName);
+       quasiIdentifierColumns.remove(columnName);
+   }
 
-	private void highlightQuasiIdentifier(String columnName) {
-	    // Marquer l'attribut quasi-identifiant au jaune
-	    highlightColumn(columnName, Color.YELLOW);
-	}
+   private void highlightQuasiIdentifier(String columnName) {
+       highlightColumn(columnName, Color.YELLOW);
+       quasiIdentifierColumns.add(columnName);
+       identifierColumns.remove(columnName);
+       sensitiveColumns.remove(columnName);
+   }
 
 	// methode permettant de marquer les en-têtes des colonnes lors du click pour la personnalisation
-	private void highlightColumn(String columnName, Color color) {
-	    TableColumnModel columnModel = tableRight.getColumnModel();
-	    int columnIndex = getColumnIndexByName(columnName);
-	    TableColumn column = columnModel.getColumn(columnIndex);
-	    String dotColor;
-	    if (color.equals(Color.RED)) {
-	        dotColor = "red";
-	    } else if (color.equals(Color.GREEN)) {
-	        dotColor = "green";
-	    } else if (color.equals(Color.YELLOW)) {
-	        dotColor = "yellow";
-	    } else {
-	        dotColor = "black"; // Couleur par défaut
-	    }
-	    column.setHeaderValue("<html><font color='blue'>" + columnName + "</font> <font color='" + dotColor + "'>●</font></html>");
-	}
+   private void highlightColumn(String columnName, Color color) {
+       TableColumnModel columnModel = tableRight.getColumnModel();
+       int columnIndex = getColumnIndexByName(columnName);
+       TableColumn column = columnModel.getColumn(columnIndex);
+       String dotColor;
+       if (color.equals(Color.RED)) {
+           dotColor = "red";
+       } else if (color.equals(Color.GREEN)) {
+           dotColor = "green";
+       } else if (color.equals(Color.YELLOW)) {
+           dotColor = "yellow";
+       } else {
+           dotColor = "black"; // Default color
+       }
+       column.setHeaderValue("<html><font color='blue'>" + columnName + "</font> <font color='" + dotColor + "'>●</font></html>");
+       tableRight.getTableHeader().repaint(); // Rafraîchir l'en-tête
+   }
    private int getColumnIndexByName(String columnName) {
        for (int i = 0; i < tableRight.getColumnCount(); i++) {
            if (tableRight.getColumnName(i).equals(columnName)) {
@@ -530,4 +588,5 @@ public class CadreRectangulaire extends JPanel {
        }
        return -1;
    }
+   
 }

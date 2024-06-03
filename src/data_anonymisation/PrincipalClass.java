@@ -18,6 +18,7 @@ public class PrincipalClass {
         // Create and show the splash screen
         SplashScreen splash = new SplashScreen();
         splash.setVisible(true);
+       
 
         // Use SwingWorker to handle the delay and then show the main window
         new SwingWorker<Void, Void>() {
@@ -27,7 +28,7 @@ public class PrincipalClass {
                 Thread.sleep(5000);
                 return null;
             }
-
+            
             @Override
             protected void done() {
                 try {
@@ -37,9 +38,13 @@ public class PrincipalClass {
                     splash.dispose();
 
                     // Show the main application window
-                    SwingUtilities.invokeLater(() -> {
-                        Fenetre fenetre = new Fenetre();
-                        fenetre.setVisible(true);
+                    SwingUtilities.invokeLater(new Runnable(){
+                        
+						@Override
+						public void run() {
+							Fenetre fenetre = new Fenetre();
+	                        fenetre.setVisible(true);
+						}
                     });
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();

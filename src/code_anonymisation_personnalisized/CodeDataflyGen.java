@@ -6,48 +6,18 @@ import java.util.HashSet;
 import java.util.Set;
 public class CodeDataflyGen {
 	
+	  private static Set<String> identifierColumns = new HashSet<>();
+	   private static Set<String> quasiIdentifierColumns = new HashSet<>();
+	   private static Set<String> sensitiveColumns = new HashSet<>();
+	
+	// generalisation des attributs quasi-identifiants
+	
 	 private static final String[][] generalizeHierarchy = {
 	            {"0-5", "6-10", "11-15", "16-20"}, // Niveau 2
 	            {"0-5", "6-10", "11-15", "16-20"}, // Niveau 3
 	            {"0-10", "11-20"}, // Niveau 4
 	            {"Bas", "Moyen", "Haut"} // Niveau 4
 	        };
-	    // Méthode pour généraliser la moyenne en fonction du niveau
-	/* public static String generalizeMoyenne(double moyenne, int niveau) {
-		    if (niveau >= 1 && niveau <= 4) {
-		        int index;
-		        switch (niveau) {
-		            case 1:
-		                index = (int) Math.ceil(moyenne / 5) - 1;
-		                if (index >= generalizeHierachy[0].length) {
-		                    index = generalizeHierachy[0].length - 1;
-		                }
-		                return generalizeHierachy[0][index];
-		            case 2:
-		                index = (int) Math.ceil(moyenne / 10) - 1;
-		                if (index >= generalizeHierachy[1].length) {
-		                    index = generalizeHierachy[1].length - 1;
-		                }
-		                return generalizeHierachy[1][index];
-		            case 3:
-		                index = (int) Math.ceil(moyenne / 10) - 1;
-		                if (index >= generalizeHierachy[1].length) {
-		                    index = generalizeHierachy[1].length - 1;
-		                }
-		                return generalizeHierachy[1][index];
-		            case 4:
-		                index = (int) Math.ceil(moyenne / 20) - 1;
-		                if (index >= generalizeHierachy[2].length) {
-		                    index = generalizeHierachy[2].length - 1;
-		                }
-		                return generalizeHierachy[2][index];
-		            default:
-		                return "#";
-		        }
-		    } else {
-		        return "#";
-		    }
-		}*/
 	 
 	// Méthode pour généraliser la moyenne en fonction du niveau
 	 public static String generalizeMoyenne(double moyenne, int niveau) {
@@ -99,42 +69,6 @@ public class CodeDataflyGen {
 			    {"0-10", "11-20", "21-30", "31-40", "41-50","51-60","61-70","71-80","81-90","91-100"}, // Niveau 3
 			    {"Enfant", "Jeune", "Adulte", "Senior"} // Niveau 4
 			};
-	 
-	/* public static String generalizeAge(double age, int niveau) {
-		    if (niveau >= 1 && niveau <= 4) {
-		        int index;
-		        switch (niveau) {
-		            case 1:
-		                index = (int) Math.ceil(age / 5) - 1;
-		                if (index >= generalizeAge[0].length) {
-		                    index = generalizeAge[0].length - 1;
-		                }
-		                return generalizeAge[0][index];
-		            case 2:
-	                    index = (int) Math.ceil(age / 10) - 1;
-	                    if (index >= generalizeAge[1].length) {
-	                        index = generalizeAge[1].length - 1;
-	                    }
-	                    return generalizeAge[1][index];
-		            case 3:
-		                index = (int) Math.ceil(age / 10) - 1;
-		                if (index >= generalizeAge[1].length) {
-		                    index = generalizeAge[1].length - 1;
-		                }
-		                return generalizeAge[1][index];
-		            case 4:
-		                index = (int) Math.ceil(age / 10) - 1;
-		                if (index >= generalizeAge[2].length) {
-		                    index = generalizeAge[2].length - 1;
-		                }
-		                return generalizeAge[2][index];
-		            default:
-		                return "#";
-		        }
-		    } else {
-		        return "#";
-		    }
-		}*/
 	 
 	// Méthode pour généraliser l'âge en fonction du niveau
 	 public static String generalizeAge(double age, int niveau) {
@@ -268,7 +202,7 @@ public class CodeDataflyGen {
 			                uniqueValues.add(cellValue);
 			            }
 
-			            // Calculer le nombre de valeurs uniques dans la colonne
+			            // Ici, on calcul le nombre de valeurs uniques dans une colonne
 			            int numUniqueValues = uniqueValues.size();
 			            // Vérifier si ce nombre est supérieur au nombre maximal de valeurs uniques trouvé jusqu'à présent
 			            if (numUniqueValues > maxUniqueValues) {
@@ -291,4 +225,86 @@ public class CodeDataflyGen {
 	              }
 			    
 			
+	              // traiter les attributs qui sont sélectionner comme des identifiants
+	              
+	              public static String traiterNom() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterPrenom() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterMatricule() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterContact() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterEmail() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterParcours() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterNiveau() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterAge() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterLieuDeNaiss() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterSexe() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterMoyenne() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterResultat() {
+	            	  return "*";
+	              }
+	              
+	              public static String traiterMention() {
+	            	  return "*";
+	              }
+	              
+	              // Méthodes de traitement pour chaque type de colonne
+	              public static String traiterIdentifiant(String columnName) {
+	                  // Implémentez le traitement pour les identifiants
+					return "*";
+	              }
+
+	              public static void traiterQuasiIdentifiant(String columnName) {
+	                  // Implémentez le traitement pour les quasi-identifiants
+	                  //System.out.println("Traitement du quasi-identifiant: " + columnName);
+	              }
+
+	              public static void traiterSensible(String columnName) {
+	                  // Implémentez le traitement pour les colonnes sensibles
+	                 // System.out.println("Traitement de la colonne sensible: " + columnName);
+	              }
+
+	           // Méthode pour traiter les colonnes en fonction de leur type
+	              public static void traiterColonnes() {
+	                  for (String columnName : identifierColumns) {
+	                      traiterIdentifiant(columnName);
+	                  }
+	                  for (String columnName : quasiIdentifierColumns) {
+	                      traiterQuasiIdentifiant(columnName);
+	                  }
+	                  for (String columnName : sensitiveColumns) {
+	                      traiterSensible(columnName);
+	                  }
+	              }
 }

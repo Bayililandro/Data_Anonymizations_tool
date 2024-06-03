@@ -51,7 +51,7 @@ public class Fenetre extends JFrame {
         getContentPane().add(rightPanel, BorderLayout.EAST);
         this.add(new CadreRectangulaire());
       
-		this.setVisible(true); // rendre la fenetre visible
+		//this.setVisible(true); // rendre la fenetre visible
 		
 		this.addWindowListener(new WindowAdapter() {
 			@Override
