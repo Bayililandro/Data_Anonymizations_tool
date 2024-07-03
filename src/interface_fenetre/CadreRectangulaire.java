@@ -2,9 +2,7 @@ package interface_fenetre;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-import java.awt.Graphics;
+
 import java.awt.event.*;
 
 import code_anonymisation_datafly.DataFlyProcessor;
@@ -16,13 +14,10 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import create_project.Importer_Exporter;
 
@@ -30,17 +25,19 @@ import create_project.Importer_Exporter;
 public class CadreRectangulaire extends JPanel {
 
 	private Font font;
-    private JTable tableLeft;
-    private JTable tableRight;
+    public static JTable tableLeft;
+    public static JTable tableRight;
     private Importer_Exporter importerExporter;
     Fenetre fenetre;
    DataFlyProcessor dataFlyProcessor;
    private boolean isPersonalizationMode = false;
-   
-   private Set<String> identifierColumns = new HashSet<>();
-   private Set<String> quasiIdentifierColumns = new HashSet<>();
-   private Set<String> sensitiveColumns = new HashSet<>();
 
+   private JButton btnAnonymized;
+   private JButton btnSave;
+   private JButton btnImport;
+   private JButton btnView;
+   private JButton btnPersonalisize;
+   private JButton btnAnonymizeds;
    private MouseListener headerMouseListener;
 
     public CadreRectangulaire() {
@@ -53,40 +50,56 @@ public class CadreRectangulaire extends JPanel {
         font= new Font(" TimesRoman ",Font.BOLD+Font.PLAIN,15);//definition de la police
         // Création du bouton pour importer le fichier Excel
         Box box1 = Box.createHorizontalBox();
-        JButton importButton = new JButton("Import data");
-        importButton.setMnemonic('I');
-        importButton.setBackground(Color.WHITE);
-        importButton.setFont(font);
-        JButton value = new JButton("Choose k");
-        value.setFont(font);
-        value.setMnemonic('C');
-        JButton anonymized = new JButton("Anonymized");
-        anonymized.setFont(font);
-        anonymized.setMnemonic('A');
-        anonymized.setBackground(Color.WHITE);
-        JButton save = new JButton("Save");
-        save.setFont(font);
-        save.setMnemonic('S');
-        save.setBackground(Color.WHITE);
-        JButton view = new JButton("View data");
-        view.setFont(font);
-        view.setMnemonic('V');
-        view.setBackground(Color.WHITE);
-        JButton personalisize = new JButton("Personalisized");
-        personalisize.setFont(font);
-        personalisize.setMnemonic('P');
-        personalisize.setBackground(Color.WHITE);
+         btnImport = new JButton("Import data");
+        btnImport.setMnemonic('I');
+        btnImport.setBackground(Color.WHITE);
+        btnImport.setFont(font);
+        JButton btnValue = new JButton("Choose k");
+        btnValue.setFont(font);
+        btnValue.setMnemonic('C');
+         btnAnonymized = new JButton("Anonymized");
+        btnAnonymized.setFont(font);
+        btnAnonymized.setMnemonic('A');
+        btnAnonymized.setBackground(Color.WHITE);
+         btnSave = new JButton("Save");
+        btnSave.setFont(font);
+        btnSave.setMnemonic('S');
+        btnSave.setBackground(Color.WHITE);
+         btnView = new JButton("View data");
+        btnView.setFont(font);
+        btnView.setMnemonic('V');
+        btnView.setBackground(Color.WHITE);
+         btnPersonalisize = new JButton("Personalisized");
+        btnPersonalisize.setFont(font);
+        btnPersonalisize.setMnemonic('P');
+        btnPersonalisize.setBackground(Color.WHITE);
+         btnAnonymizeds= new JButton("Anonymizeds");
+        btnAnonymizeds.setFont(font);
+        btnAnonymizeds.setMnemonic('A');
+        btnAnonymizeds.setBackground(Color.WHITE);
         
-        importButton.addActionListener(new ActionListener() {
+        btnAnonymized.setVisible(false);
+    	btnSave.setVisible(false);
+    	btnView.setVisible(false);
+    	btnAnonymizeds.setVisible(false);
+    	btnPersonalisize.setVisible(false);
+        
+        btnImport.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+            	btnAnonymized.setVisible(true);
+            	btnSave.setVisible(true);
+            	btnView.setVisible(true);
+            	btnAnonymizeds.setVisible(true);
+            	btnPersonalisize.setVisible(true);
                 if (tableLeft != null && tableLeft.getRowCount() > 0) {
-                    int response = showConfirmDialog();
+                	DialogUtils dialog= new DialogUtils();
+                    int response = dialog.showConfirmDialog();
                     if (response != JOptionPane.YES_OPTION) {
-                        return; // Do nothing if the user does not confirm
+                        return; // Attendre la confirmation de l'utilisateur
                     }
                     
-                    // Clear the table
+                    // Netoyer les tables
                     DefaultTableModel model = (DefaultTableModel) tableLeft.getModel();
                     model.setRowCount(0);
                     model.setColumnCount(0);
@@ -95,64 +108,60 @@ public class CadreRectangulaire extends JPanel {
                     modelRight.setColumnCount(0);
                 }
                 
-                view.setEnabled(false);
-                anonymized.setEnabled(false);
-                personalisize.setEnabled(false);
-                save.setEnabled(false);
-                
                 importerExporter = new Importer_Exporter(fenetre);
                 List<List<String>> data = importerExporter.importExcelFile();
                 if (data != null) {
                     afficherDonnees(data);
-                    view.setEnabled(true);
                 }
             }
         });
-        box1.add(importButton);
+        box1.add(btnImport);
         
-        
-        value.addActionListener(new ActionListener() {
+        btnView.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	btnAnonymized.setVisible(true);
+            	btnAnonymizeds.setVisible(false);
+            	markData();
+            	btnAnonymized.setEnabled(true);
+            	btnPersonalisize.setEnabled(true);
+                btnSave.setEnabled(true);
+            }
+        });
+        box1.add(btnView);
+        btnAnonymizeds.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				 int selectedValue = DialogUtils.showValueSelectionDialog(fenetre);
-	                System.out.println("Selected value: " + selectedValue);
+				 DialogUtils.showValueSelectionDialog(fenetre);
+				CodeDataflyGen.traiterColonnes();	
 			}
 		});
-        //box1.add(value);
-        
-        
-        view.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	markData();
-            	anonymized.setEnabled(true);
-                personalisize.setEnabled(true);
-                save.setEnabled(true);
-            }
-        });
-        box1.add(view);
+        box1.add(btnAnonymizeds);
         
         
         
-        anonymized.addActionListener(new ActionListener() {
+        btnAnonymized.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
             	 anonymizeData();
             }
         });
         
-        box1.add(anonymized);
-        personalisize.addActionListener(new ActionListener() {
+        box1.add(btnAnonymized);
+        btnPersonalisize.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
 				personlizedAnonymity();
+				btnAnonymized.setVisible(false);
+				btnAnonymizeds.setVisible(true);
 			}
 		});
        
-        box1.add(personalisize);
-        save.addActionListener(new ActionListener() {
+        box1.add(btnPersonalisize);
+        btnSave.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser filechoose = new JFileChooser();
@@ -169,8 +178,8 @@ public class CadreRectangulaire extends JPanel {
                 }
             }
         });
-        box1.add(save);
-        box1.add(save);
+        box1.add(btnSave);
+        //box1.add(save);
         add(box1);
 
         /*
@@ -221,75 +230,73 @@ public class CadreRectangulaire extends JPanel {
          * Gerer les action du curseur
          * */
         
-        importButton.addMouseListener(new MouseAdapter() {
+        btnImport.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                importButton.setBackground(Color.GREEN); // Changer la couleur au survol
+            	btnImport.setBackground(Color.GREEN); // Changer la couleur au survol
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                importButton.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            	btnImport.setBackground(Color.WHITE); // Revenir à la couleur d'origine
             }
         });
         
-        view.addMouseListener(new MouseAdapter() {
+        btnView.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                view.setBackground(Color.GREEN); // Changer la couleur au survol
+            	btnView.setBackground(Color.GREEN); // Changer la couleur au survol
             }
             @Override
             public void mouseExited(MouseEvent e) {
-            	view.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            	btnView.setBackground(Color.WHITE); // Revenir à la couleur d'origine
             }
         });
         
-        anonymized.addMouseListener(new MouseAdapter() {
+        btnAnonymized.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                anonymized.setBackground(Color.GREEN); // Changer la couleur au survol
+            	btnAnonymized.setBackground(Color.GREEN); // Changer la couleur au survol
             }
             @Override
             public void mouseExited(MouseEvent e) {
-            	anonymized.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            	btnAnonymized.setBackground(Color.WHITE); // Revenir à la couleur d'origine
             }
         });
         
-        personalisize.addMouseListener(new MouseAdapter() {
+        btnAnonymizeds.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-            	personalisize.setBackground(Color.GREEN); // Changer la couleur au survol
+            	btnAnonymizeds.setBackground(Color.GREEN); // Changer la couleur au survol
             }
             @Override
             public void mouseExited(MouseEvent e) {
-            	personalisize.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            	btnAnonymizeds.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            }
+        });
+        
+        btnPersonalisize.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            	btnPersonalisize.setBackground(Color.GREEN); // Changer la couleur au survol
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+            	btnPersonalisize.setBackground(Color.WHITE); // Revenir à la couleur d'origine
             }
         });
         
        
-        save.addMouseListener(new MouseAdapter() {
+        btnSave.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                save.setBackground(Color.GREEN); // Changer la couleur au survol
+            	btnSave.setBackground(Color.GREEN); // Changer la couleur au survol
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                save.setBackground(Color.WHITE); // Revenir à la couleur d'origine
+            	btnSave.setBackground(Color.WHITE); // Revenir à la couleur d'origine
             }
         });
         
-        
-        // Ajouter un écouteur d'événements aux en-têtes de colonnes de la JTable
-      /*  JTableHeader header = tableRight.getTableHeader();
-        header.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                int columnIndex = header.columnAtPoint(e.getPoint());
-                String columnName = tableRight.getColumnName(columnIndex);
-                // Ouvrir une boîte de dialogue pour choisir le type d'attribut
-                showAttributeTypeSelectionDialog(columnName);
-            }
-        });       
-    }*/
      // Créer un MouseListener pour les en-têtes de colonnes
         headerMouseListener = new MouseAdapter() {
             @Override
@@ -311,13 +318,14 @@ public class CadreRectangulaire extends JPanel {
 
                     switch (choice) {
                         case 0:
-                            highlightIdentifier(columnName);
+                            CodeDataflyGen.highlightIdentifier(columnName);
+                            //traiterIdentifiant(columnName);
                             break;
                         case 1:
-                            highlightQuasiIdentifier(columnName);
+                        	CodeDataflyGen.highlightQuasiIdentifier(columnName);
                             break;
                         case 2:
-                            highlightSensitive(columnName);
+                        	CodeDataflyGen.highlightSensitive(columnName);
                             break;
                         default:
                             // Pas d'action nécessaire
@@ -326,35 +334,11 @@ public class CadreRectangulaire extends JPanel {
                 }
             }
         };
+        tableRight.getTableHeader().addMouseListener(headerMouseListener);
     }
     JScrollPane scrollPane = new JScrollPane(tableRight);
 
-    /*
-     * Méthode qui permet l'ouverture d'une boite de dialogue pour la sélection
-     * des catégorie de données par l'utilisateur
-     * à chaque catégorie on ajout des étiquêtes spécifique pour les distinguer
-     * */
-    /*private void showAttributeTypeSelectionDialog(String columnName) {
-        // Créer une boîte de dialogue pour choisir le type d'attribut
-        String[] options = {"Sensible", "Identifiant", "Quasi-Identifiant", "Aucun"};
-        int choice = JOptionPane.showOptionDialog(null, "Choose attribute type '" + columnName + "':", 
-                                                   "Attribute Type Selection", JOptionPane.DEFAULT_OPTION, 
-                                                   JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        // Appeler la méthode correspondante pour marquer l'attribut après la sélection du type d'attribut
-        if (choice != JOptionPane.CLOSED_OPTION) {
-            switch (options[choice]) {
-                case "Identifiant":
-                    highlightIdentifier(columnName);
-                    break;
-                case "Sensible":
-                    highlightSensitive(columnName);
-                    break;
-                case "Quasi-Identifiant":
-                    highlightQuasiIdentifier(columnName);
-                    break;
-            }
-        }
-    }*/
+    
     
     /*
      * Methode qui definit l'action de l'anonymat des données
@@ -408,8 +392,6 @@ public class CadreRectangulaire extends JPanel {
             dataFlyProcessor.markIdentifyingAttributes(entetes);
             dataFlyProcessor.markQuasiIdentifyingAttribut(entetes);
             dataFlyProcessor.markSensitiveIdentifyingAttribut(entetes);
-            //dataFlyProcessor.generalizeQuasiIdentifyingAttribute(data, entetes);
-            // Afficher les données traitées dans la JTable tableRight
             afficherDonneesTraitees(data, entetes);
             
         }
@@ -425,6 +407,7 @@ public class CadreRectangulaire extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             // Récupération des données importées dans tableLeft
+        	btnAnonymized.setVisible(false);
             List<List<String>> data = recupererDonneesDeTable();
             if (data != null) {
                 List<String> headers = new ArrayList<>();
@@ -433,8 +416,6 @@ public class CadreRectangulaire extends JPanel {
                 }
                 afficherDonneesTraitees(data, headers);
                 isPersonalizationMode = true;
-                //JOptionPane.showMessageDialog(null, "Mode de personnalisation activé. Cliquez sur les en-têtes de colonne pour les personnaliser.");
-                tableRight.getTableHeader().addMouseListener(headerMouseListener);
             }
         }
     }
@@ -473,24 +454,6 @@ public class CadreRectangulaire extends JPanel {
 
         revalidate();
         repaint();
-    }
-
-    // boite de dialogue qui permet un message de confirmation lorque les tables ne sont pas vide
-    private int showConfirmDialog() {
-        // Create a red question mark icon
-        BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-        Graphics g = image.createGraphics();
-        g.setColor(Color.RED);
-        g.fillOval(0, 0, 32, 32);
-        g.setColor(Color.WHITE);
-        g.drawString("?", 12, 22);
-        g.dispose();
-        Icon icon = new ImageIcon(image);
-
-        // Show the custom confirm dialog with the red question mark icon
-        return JOptionPane.showConfirmDialog(this,
-                "Table is not empty, are you sure to overwrite it",
-                "Confirm Overwrite", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, icon);
     }
    
    public List<List<String>> recupererDonneesDeTable() {
@@ -539,54 +502,5 @@ public class CadreRectangulaire extends JPanel {
 	    // Remplacer le modèle de la table avec le nouveau modèle contenant les données traitées
 	    tableRight.setModel(model);
 	}
-   
-   
-   private void highlightIdentifier(String columnName) {
-       highlightColumn(columnName, Color.RED);
-       identifierColumns.add(columnName);
-       quasiIdentifierColumns.remove(columnName);
-       sensitiveColumns.remove(columnName);
-   }
-
-   private void highlightSensitive(String columnName) {
-       highlightColumn(columnName, Color.GREEN);
-       sensitiveColumns.add(columnName);
-       identifierColumns.remove(columnName);
-       quasiIdentifierColumns.remove(columnName);
-   }
-
-   private void highlightQuasiIdentifier(String columnName) {
-       highlightColumn(columnName, Color.YELLOW);
-       quasiIdentifierColumns.add(columnName);
-       identifierColumns.remove(columnName);
-       sensitiveColumns.remove(columnName);
-   }
-
-	// methode permettant de marquer les en-têtes des colonnes lors du click pour la personnalisation
-   private void highlightColumn(String columnName, Color color) {
-       TableColumnModel columnModel = tableRight.getColumnModel();
-       int columnIndex = getColumnIndexByName(columnName);
-       TableColumn column = columnModel.getColumn(columnIndex);
-       String dotColor;
-       if (color.equals(Color.RED)) {
-           dotColor = "red";
-       } else if (color.equals(Color.GREEN)) {
-           dotColor = "green";
-       } else if (color.equals(Color.YELLOW)) {
-           dotColor = "yellow";
-       } else {
-           dotColor = "black"; // Default color
-       }
-       column.setHeaderValue("<html><font color='blue'>" + columnName + "</font> <font color='" + dotColor + "'>●</font></html>");
-       tableRight.getTableHeader().repaint(); // Rafraîchir l'en-tête
-   }
-   private int getColumnIndexByName(String columnName) {
-       for (int i = 0; i < tableRight.getColumnCount(); i++) {
-           if (tableRight.getColumnName(i).equals(columnName)) {
-               return i;
-           }
-       }
-       return -1;
-   }
-   
+       
 }

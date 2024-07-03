@@ -1,6 +1,5 @@
 package test;
 
-import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
@@ -13,8 +12,6 @@ public class MonTest {
 			win.setSize(400, 600);
 			win.setLocationRelativeTo(null);
 			win.setVisible(true);
-			
-			JPanel panel= new JPanel();
 			
 			JProgressBar bar= new JProgressBar();
 			win.add(bar);

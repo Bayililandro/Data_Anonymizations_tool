@@ -26,7 +26,7 @@ public class Fenetre extends JFrame {
 			OutilEtMenu outilEtMenu= new OutilEtMenu(); // création proprement dite de la barre d'outil et de manu
 	
 	public Fenetre() {
-		super("PFCL_Anonymization.Tool"); // nom de la fenetre
+		super("PFCL_Anonymization"); // nom de la fenetre
 		this.setSize(800, 600); //taille de la fenetre au demarrage
 		this.setLocationRelativeTo(null); // imposer la fenetre de demarrer au centre de l'ecran
 		this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // Liberer les ressource de la fenetre	 

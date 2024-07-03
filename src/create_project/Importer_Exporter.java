@@ -36,7 +36,7 @@ public class Importer_Exporter extends JDialog {
 	        super(parent, "Importation Excel", true);
 
 	        pack();
-	       setLocationRelativeTo(parent);
+	       setLocationRelativeTo(parent);// ou null en paramètre pour que la JDialog reste centrée
  
 	    }
 
@@ -82,7 +82,7 @@ public class Importer_Exporter extends JDialog {
 	                JOptionPane.showMessageDialog(this, "Erreur lors de la lecture du fichier Excel : " + ex.getMessage(),
 	                        "Erreur", JOptionPane.ERROR_MESSAGE);
 	            }
-	        } 
+	        }
 	        return null;
 	    }
 	    

@@ -2,7 +2,6 @@ package test;
 
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;

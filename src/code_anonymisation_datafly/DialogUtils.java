@@ -1,10 +1,21 @@
 package code_anonymisation_datafly;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-public class DialogUtils {
+public class DialogUtils extends JDialog{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1197792937818176311L;
 	private static int selectedValue = 1; // Valeur par défaut
 
     // Méthode statique pour afficher la fenêtre de dialogue de sélection de valeur
@@ -34,5 +45,23 @@ public class DialogUtils {
     // Getter pour récupérer la dernière valeur sélectionnée
     public static int getSelectedValue() {
         return selectedValue;
+    }
+    
+    // boite de dialogue qui permet un message de confirmation lorque les tables ne sont pas vide
+    public int showConfirmDialog() {
+        // Create a red question mark icon
+        BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = image.createGraphics();
+        g.setColor(Color.RED);
+        g.fillOval(0, 0, 32, 32);
+        g.setColor(Color.WHITE);
+        g.drawString("?", 12, 22);
+        g.dispose();
+        Icon icon = new ImageIcon(image);
+
+        // Show the custom confirm dialog with the red question mark icon
+        return JOptionPane.showConfirmDialog(this,
+                "Table is not empty, are you sure to overwrite it",
+                "Confirm Overwrite", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, icon);
     }
 }

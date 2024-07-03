@@ -1,7 +1,12 @@
 package code_anonymisation_personnalisized;
 import javax.swing.JTable;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
+import code_anonymisation_datafly.DialogUtils;
+import interface_fenetre.CadreRectangulaire;
 
+import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
 public class CodeDataflyGen {
@@ -21,7 +26,7 @@ public class CodeDataflyGen {
 	 
 	// Méthode pour généraliser la moyenne en fonction du niveau
 	 public static String generalizeMoyenne(double moyenne, int niveau) {
-	     if (niveau >= 1 && niveau <= 3) {
+	     if (niveau >1 && niveau <= 3) {
 	         switch (niveau) {
 	             case 1:
 	                 return findGeneralization(moyenne, generalizeHierarchy[0], 5);
@@ -158,12 +163,15 @@ public class CodeDataflyGen {
 			
 			 // Méthode pour généraliser les valeurs de l'attribut "Parcourt"
 			public static String generaliseParcourt(String parcourtVal) {
-				
-				if (parcourtVal == "MPCI" || parcourtVal == "SVT") {
-					
-				}
-			    // Généraliser toutes les valeurs de "Parcourt" par "ST"
-			    return "ST";
+				 if (parcourtVal.equalsIgnoreCase("MPCI") || parcourtVal.equalsIgnoreCase("SVT")) {
+				        return "ST";
+				    } else if (parcourtVal.equalsIgnoreCase("LM") || parcourtVal.equalsIgnoreCase("Histoire") || parcourtVal.equalsIgnoreCase("Geographie")) {
+				        return "LSH";
+				    } else if (parcourtVal.equalsIgnoreCase("mathematique") || parcourtVal.equalsIgnoreCase("physique") || parcourtVal.equalsIgnoreCase("chimie") || parcourtVal.equalsIgnoreCase("informatique")) {
+				        return "MPCI";
+				    }
+				    return parcourtVal;
+			   
 			}
 			
 			/*
@@ -223,72 +231,87 @@ public class CodeDataflyGen {
 	              public static String generalizedNiveau(String niveauValue) {
 	            	  return "Licence*";
 	              }
-			    
-			
-	              // traiter les attributs qui sont sélectionner comme des identifiants
 	              
-	              public static String traiterNom() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterPrenom() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterMatricule() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterContact() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterEmail() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterParcours() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterNiveau() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterAge() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterLieuDeNaiss() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterSexe() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterMoyenne() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterResultat() {
-	            	  return "*";
-	              }
-	              
-	              public static String traiterMention() {
-	            	  return "*";
+	              public  static int getColumnIndexByName(String columnName) {
+	                  for (int i = 0; i < CadreRectangulaire.tableRight.getColumnCount(); i++) {
+	                      if (CadreRectangulaire.tableRight.getColumnName(i).equals(columnName)) {
+	                          return i;
+	                      }
+	                  }
+	                  return -1;
 	              }
 	              
 	              // Méthodes de traitement pour chaque type de colonne
-	              public static String traiterIdentifiant(String columnName) {
-	                  // Implémentez le traitement pour les identifiants
-					return "*";
+	              public static void traiterIdentifiant(String columnName) {
+	          	    // Récupérer l'index de la colonne à partir du nom de la colonne
+	          	    int columnIndex = getColumnIndexByName(columnName);
+	          	
+	          	    if (columnIndex != -1) {
+	          	        // Parcourir toutes les lignes de la table (sauf l'en-tête)
+	          	        for (int row = 0; row < CadreRectangulaire.tableRight.getRowCount(); row++) {
+	          	            // Remplacer la valeur de la cellule par "*"
+	          	            CadreRectangulaire.tableRight.setValueAt("*", row, columnIndex);
+	          	        }
+	          	    }
+	          	}  
+	              public static void traiterQuasiIdentifiant(String columnName) {
+	            	  int columnIndex = getColumnIndexByName(columnName);
+	            	  int k= DialogUtils.getSelectedValue();
+	            	    if (columnIndex != -1) {
+	            	        if (columnName.equalsIgnoreCase("Sexe")) {
+	            	            // Généraliser les valeurs dans la colonne "Sexe"
+	            	            for (int row = 0; row < CadreRectangulaire.tableRight.getRowCount(); row++) {
+	            	                String value = (String) CadreRectangulaire.tableRight.getValueAt(row, columnIndex);
+	            	                String generalizedValue = generalizeSexe(value, k); // Changez le niveau selon vos besoins
+	            	                CadreRectangulaire.tableRight.setValueAt(generalizedValue, row, columnIndex);
+	            	            }
+	            	        } else if (columnName.equalsIgnoreCase("Age")) {
+	            	                // Niveau de généralisation (ajustez cette valeur selon vos besoins)
+	            	                // Généraliser les valeurs dans la colonne "Age"
+	            	                for (int row = 0; row < CadreRectangulaire.tableRight.getRowCount(); row++) {
+	            	                    String value = (String) CadreRectangulaire.tableRight.getValueAt(row, columnIndex);
+	            	                    try {
+	            	                        double age = Double.parseDouble(value);
+	            	                        String generalizedValue = generalizeAge(age, k);
+	            	                        CadreRectangulaire.tableRight.setValueAt(generalizedValue, row, columnIndex);
+	            	                    } catch (NumberFormatException e) {
+	            	                        e.printStackTrace();
+	            	                    }
+	            	                }
+	            	        } else if(columnName.equalsIgnoreCase("Lieu de naissance")) {
+            	            	// Généraliser les valeurs dans la colonne "Lieu de naissance"
+	            	        	for(int row= 0; row <CadreRectangulaire.tableRight.getRowCount(); row++) {
+	            	        		String value= (String) CadreRectangulaire.tableRight.getValueAt(row, columnIndex);
+	            	        		String generalizedValue= generalizedLieuDeNaissance(value);
+	            	        		CadreRectangulaire.tableRight.setValueAt(generalizedValue, row, columnIndex);
+	            	        	}
+            	            } else if(columnName.equalsIgnoreCase("Parcours")) {
+            	            	 // Généraliser les valeurs dans la colonne "Parcours"
+            	                for (int row = 0; row < CadreRectangulaire.tableRight.getRowCount(); row++) {
+            	                    String value = (String) CadreRectangulaire.tableRight.getValueAt(row, columnIndex);
+            	                    String generalizedValue = generaliseParcourt(value);
+            	                    CadreRectangulaire.tableRight.setValueAt(generalizedValue, row, columnIndex);
+            	            	}
+            	            } else if(columnName.equalsIgnoreCase("Moyenne")) {
+            	            	for(int row= 0; row < CadreRectangulaire.tableRight.getRowCount(); row++) {
+            	            		String value = CadreRectangulaire.tableRight.getValueAt(row, columnIndex).toString();
+            	            		double moyenne = Double.parseDouble(value);
+            	            		String generalizedValue= generalizeMoyenne(moyenne, k);
+            	            		CadreRectangulaire.tableRight.setValueAt(generalizedValue, row, columnIndex);
+            	            	}
+            	            	
+            	            }else if(columnName.equalsIgnoreCase("Niveau")) {
+            	            	// Généralisation de l'attribut "Niveau"
+            	            	for(int row= 0; row< CadreRectangulaire.tableRight.getRowCount(); row++) {
+            	            		String value= (String)CadreRectangulaire.tableRight.getValueAt(row, columnIndex)/*.toString()*/;// conertir les données en String. possible avec un cast ou la méthode toString
+            	            		String generalizedValue= generalizedNiveau(value);
+            	            		CadreRectangulaire.tableRight.setValueAt(generalizedValue, row, columnIndex);
+            	            	}
+            	            }
+            	            	
+	            	    }
 	              }
 
-	              public static void traiterQuasiIdentifiant(String columnName) {
-	                  // Implémentez le traitement pour les quasi-identifiants
-	                  //System.out.println("Traitement du quasi-identifiant: " + columnName);
-	              }
 
 	              public static void traiterSensible(String columnName) {
 	                  // Implémentez le traitement pour les colonnes sensibles
@@ -306,5 +329,45 @@ public class CodeDataflyGen {
 	                  for (String columnName : sensitiveColumns) {
 	                      traiterSensible(columnName);
 	                  }
+	              }
+	              
+	              public static void highlightIdentifier(String columnName) {
+	                  highlightColumn(columnName, Color.RED);
+	                  identifierColumns.add(columnName);
+	                  quasiIdentifierColumns.remove(columnName);
+	                  sensitiveColumns.remove(columnName);
+	              }
+
+	              public static void highlightSensitive(String columnName) {
+	                  highlightColumn(columnName, Color.GREEN);
+	                  sensitiveColumns.add(columnName);
+	                  identifierColumns.remove(columnName);
+	                  quasiIdentifierColumns.remove(columnName);
+	              }
+
+	              public static void highlightQuasiIdentifier(String columnName) {
+	                  highlightColumn(columnName, Color.YELLOW);
+	                  quasiIdentifierColumns.add(columnName);
+	                  identifierColumns.remove(columnName);
+	                  sensitiveColumns.remove(columnName);
+	              }
+
+	           	// methode permettant de marquer les en-têtes des colonnes lors du click pour la personnalisation
+	              public static void highlightColumn(String columnName, Color color) {
+	                  TableColumnModel columnModel = CadreRectangulaire.tableRight.getColumnModel();
+	                  int columnIndex = getColumnIndexByName(columnName);
+	                  TableColumn column = columnModel.getColumn(columnIndex);
+	                  String dotColor;
+	                  if (color.equals(Color.RED)) {
+	                      dotColor = "red";
+	                  } else if (color.equals(Color.GREEN)) {
+	                      dotColor = "green";
+	                  } else if (color.equals(Color.YELLOW)) {
+	                      dotColor = "yellow";
+	                  } else {
+	                      dotColor = "black"; // Default color
+	                  }
+	                  column.setHeaderValue("<html><font color='blue'>" + columnName + "</font> <font color='" + dotColor + "'>●</font></html>");
+	                  CadreRectangulaire.tableRight.getTableHeader().repaint(); // Rafraîchir l'en-tête
 	              }
 }

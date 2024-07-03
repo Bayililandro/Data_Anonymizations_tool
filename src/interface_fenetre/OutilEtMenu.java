@@ -25,7 +25,7 @@ public class OutilEtMenu {
 	private Font font;
 	public OutilEtMenu() {
 		toolBar= new JToolBar(); // creation de la barre d'outil
-		font= new Font(" TimesRoman ",Font.PLAIN,18);
+		font= new Font(" TimesRoman ",Font.ROMAN_BASELINE,18);
 		/*
 		 *  ajout des elements a la barre d'outil
 		 *
